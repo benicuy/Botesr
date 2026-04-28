@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotForge — Bot Generator + Pterodactyl</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d12;
+    --bg2: #0f1318;
+    --bg3: #151a22;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #00e5a0;
+    --accent2: #00b8d4;
+    --wa: #25d366;
+    --tg: #229ed9;
+    --danger: #ff4d6d;
+    --warn: #ffa726;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* SIDEBAR */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 230px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+  .logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .logo-text span { color: var(--accent); }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .nav { padding: 12px 10px; flex: 1; }
+  .nav-section { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; padding: 12px 10px 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 400;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .nav-item.active { background: rgba(0,229,160,0.1); color: var(--accent); }
+  .nav-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto; font-size: 10px; font-weight: 600;
+    padding: 2px 7px; border-radius: 20px;
+    background: rgba(0,229,160,0.15); color: var(--accent);
+  }
+
+  .sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .ptero-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .status-dot.connected { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .status-dot.error { background: var(--danger); }
+
+  /* MAIN CONTENT */
+  .main {
+    margin-left: 230px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .page-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; }
+  .topbar-actions { display: flex; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text);
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn:hover { background: rgba(255,255,255,0.07); }
+  .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  .btn-primary:hover { background: #00c487; }
+  .btn-danger { background: rgba(255,77,109,0.15); border-color: rgba(255,77,109,0.4); color: var(--danger); }
+  .btn-danger:hover { background: rgba(255,77,109,0.25); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  .content { padding: 28px; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .icon { font-size: 16px; }
+
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  input, select, textarea {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,160,0.1);
+  }
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+  textarea { resize: vertical; min-height: 80px; }
+  select option { background: var(--bg3); }
+  input[type="password"] { font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+
+  /* FEATURE CHIPS */
+  .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .chip {
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all 0.15s;
+    text-align: center;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--border2); color: var(--text); }
+  .chip.active { border-color: var(--accent); background: rgba(0,229,160,0.08); color: var(--accent); }
+  .chip .chip-icon { display: block; font-size: 18px; margin-bottom: 4px; }
+
+  /* BOT TYPE SELECTOR */
+  .bot-types { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .bot-type-card {
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    background: var(--bg3);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .bot-type-card:hover { border-color: var(--border2); }
+  .bot-type-card.selected-wa { border-color: var(--wa); background: rgba(37,211,102,0.07); }
+  .bot-type-card.selected-tg { border-color: var(--tg); background: rgba(34,158,217,0.07); }
+  .bot-type-icon { font-size: 36px; margin-bottom: 10px; }
+  .bot-type-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .bot-type-desc { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* CODE EDITOR */
+  .code-wrap {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+  }
+  .code-tabs { display: flex; gap: 4px; }
+  .code-tab {
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.12s;
+    border: 1px solid transparent;
+  }
+  .code-tab.active { background: var(--bg2); color: var(--text); border-color: var(--border); }
+  .code-actions { display: flex; gap: 8px; align-items: center; }
+  pre {
+    padding: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #a8d5b5;
+    overflow-x: auto;
+    max-height: 440px;
+    overflow-y: auto;
+    white-space: pre;
+  }
+
+  /* PTERODACTYL PANEL */
+  .ptero-connect {
+    background: linear-gradient(135deg, rgba(0,229,160,0.05), rgba(0,184,212,0.05));
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .ptero-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .ptero-logo-badge {
+    width: 44px; height: 44px;
+    background: rgba(0,229,160,0.15);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .ptero-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .ptero-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* SERVER LIST */
+  .server-list { display: flex; flex-direction: column; gap: 10px; }
+  .server-item {
+    display: flex; align-items: center;
+    padding: 14px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    gap: 14px;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+  .server-item:hover { border-color: var(--border2); }
+  .server-item.selected { border-color: var(--accent); background: rgba(0,229,160,0.05); }
+  .server-icon {
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    background: rgba(0,229,160,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .server-info { flex: 1; min-width: 0; }
+  .server-name { font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .server-id { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+  .server-status {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .server-status.running { background: rgba(0,229,160,0.15); color: var(--accent); }
+  .server-status.offline { background: rgba(107,114,128,0.2); color: var(--muted); }
+  .server-status.starting { background: rgba(255,167,38,0.15); color: var(--warn); }
+
+  /* DEPLOY LOG */
+  .deploy-log {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    max-height: 260px;
+    overflow-y: auto;
+    color: #4ade80;
+  }
+  .log-line { display: flex; gap: 12px; }
+  .log-time { color: var(--muted); flex-shrink: 0; }
+  .log-info { color: var(--accent2); }
+  .log-error { color: var(--danger); }
+  .log-warn { color: var(--warn); }
+  .log-success { color: var(--accent); }
+
+  /* NOTIFICATION */
+  .notif {
+    position: fixed; top: 20px; right: 20px;
+    padding: 12px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 9999;
+    animation: slideIn 0.25s ease;
+    max-width: 320px;
+    border: 1px solid;
+  }
+  .notif.success { background: rgba(0,229,160,0.15); border-color: rgba(0,229,160,0.4); color: var(--accent); }
+  .notif.error { background: rgba(255,77,109,0.15); border-color: rgba(255,77,109,0.4); color: var(--danger); }
+  .notif.info { background: rgba(0,184,212,0.15); border-color: rgba(0,184,212,0.4); color: var(--accent2); }
+  @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* STATS GRID */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-top: 6px; }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.blue { color: var(--accent2); }
+  .stat-value.orange { color: var(--warn); }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+
+  /* DEPLOY PROGRESS */
+  .deploy-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .deploy-step {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .step-indicator {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .step-indicator.done { background: var(--accent); border-color: var(--accent); color: #000; }
+  .step-indicator.active { border-color: var(--accent); color: var(--accent); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .step-label-text { flex: 1; }
+  .step-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* MODAL */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 28px;
+    width: 100%;
+    max-width: 480px;
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  /* SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,229,160,0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* TAG */
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .tag-wa { background: rgba(37,211,102,0.15); color: var(--wa); }
+  .tag-tg { background: rgba(34,158,217,0.15); color: var(--tg); }
+
+  /* BOT LIST TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 10px 16px;
+    font-size: 11px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 13px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .info-box {
+    background: rgba(0,184,212,0.06);
+    border: 1px solid rgba(0,184,212,0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--accent2);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-text">Bot<span>Forge</span></div>
+      <div class="logo-sub">Bot Manager + Pterodactyl</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Menu</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <span class="nav-icon">⬛</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('create')">
+        <span class="nav-icon">✚</span> Buat Bot Baru
+        <span class="nav-badge">New</span>
+      </div>
+      <div class="nav-item" onclick="showPage('mybots')">
+        <span class="nav-icon">🤖</span> Bot Saya
+      </div>
+      <div class="nav-section">Pterodactyl</div>
+      <div class="nav-item" onclick="showPage('pterodactyl')">
+        <span class="nav-icon">🦅</span> Hubungkan Panel
+      </div>
+      <div class="nav-item" onclick="showPage('servers')">
+        <span class="nav-icon">🖥</span> Server List
+      </div>
+      <div class="nav-item" onclick="showPage('deploy')">
+        <span class="nav-icon">🚀</span> Deploy Bot
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="ptero-status" id="ptero-status-bar">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Panel belum terhubung</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn btn-sm" onclick="showPage('pterodactyl')">🦅 Pterodactyl</button>
+        <button class="btn btn-primary btn-sm" onclick="showPage('create')">✚ Buat Bot</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD PAGE -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Bot</div>
+            <div class="stat-value green" id="stat-total">0</div>
+            <div class="stat-sub">bot dibuat</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Bot Aktif</div>
+            <div class="stat-value blue" id="stat-active">0</div>
+            <div class="stat-sub">running di server</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">WhatsApp</div>
+            <div class="stat-value" style="color:var(--wa)" id="stat-wa">0</div>
+            <div class="stat-sub">bot WA</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Telegram</div>
+            <div class="stat-value" style="color:var(--tg)" id="stat-tg">0</div>
+            <div class="stat-sub">bot Telegram</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div class="card">
+            <div class="card-title"><span class="icon">⚡</span> Quick Start</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <button class="btn" style="justify-content:flex-start;" onclick="showPage('pterodactyl')">
+                🦅 1. Hubungkan Panel Pterodactyl
+              </button>
+              <button class="btn" style="justify-content:flex-start;" onclick="showPage('create')">
+                ✚ 2. Buat Bot Baru
+              </button>
+              <button class="btn" style="justify-content:flex-start;" onclick="showPage('deploy')">
+                🚀 3. Deploy ke Server
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="icon">📋</span> Bot Terbaru</div>
+            <div id="dash-bot-list">
+              <div class="empty-state" style="padding:24px 0;">
+                <div class="empty-icon" style="font-size:32px;">🤖</div>
+                <div style="font-size:13px;color:var(--muted);">Belum ada bot. Buat yang pertama!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CREATE BOT PAGE -->
+      <div class="page" id="page-create">
+        <div class="bot-types">
+          <div class="bot-type-card" id="type-wa" onclick="selectBotType('wa')">
+            <div class="bot-type-icon">💬</div>
+            <div class="bot-type-name">WhatsApp Bot</div>
+            <div class="bot-type-desc">Baileys / whatsapp-web.js</div>
+          </div>
+          <div class="bot-type-card" id="type-tg" onclick="selectBotType('tg')">
+            <div class="bot-type-icon">✈️</div>
+            <div class="bot-type-name">Telegram Bot</div>
+            <div class="bot-type-desc">Telegraf / node-telegram-bot-api</div>
+          </div>
+        </div>
+
+        <!-- WA CONFIG -->
+        <div id="wa-config" style="display:none;">
+          <div class="card">
+            <div class="card-title"><span class="icon">⚙️</span> Konfigurasi WhatsApp Bot</div>
+            <div class="form-grid" style="margin-bottom:16px;">
+              <div class="form-group">
+                <label>Nama Bot</label>
+                <input type="text" id="wa-name" value="WABot" placeholder="Nama bot">
+              </div>
+              <div class="form-group">
+                <label>Prefix Perintah</label>
+                <input type="text" id="wa-prefix" value="!" maxlength="3">
+              </div>
+              <div class="form-group">
+                <label>Nomor Owner (62xxx)</label>
+                <input type="text" id="wa-owner" value="628123456789">
+              </div>
+              <div class="form-group">
+                <label>Library</label>
+                <select id="wa-lib">
+                  <option value="baileys">@whiskeysockets/baileys (Rekomendasi)</option>
+                  <option value="wwebjs">whatsapp-web.js</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label>Pesan Selamat Datang</label>
+                <textarea id="wa-welcome">Halo! Ketik !help untuk melihat perintah tersedia.</textarea>
+              </div>
+            </div>
+            <label style="margin-bottom:10px;display:block;">Pilih Fitur</label>
+            <div class="features-grid" id="wa-feat-grid">
+              <div class="chip active" data-val="help" onclick="this.classList.toggle('active')"><span class="chip-icon">❓</span>!help menu</div>
+              <div class="chip active" data-val="ping" onclick="this.classList.toggle('active')"><span class="chip-icon">🏓</span>!ping</div>
+              <div class="chip" data-val="sticker" onclick="this.classList.toggle('active')"><span class="chip-icon">🎭</span>Sticker maker</div>
+              <div class="chip" data-val="downloader" onclick="this.classList.toggle('active')"><span class="chip-icon">⬇️</span>Downloader</div>
+              <div class="chip" data-val="antispam" onclick="this.classList.toggle('active')"><span class="chip-icon">🛡️</span>Anti spam</div>
+              <div class="chip" data-val="group" onclick="this.classList.toggle('active')"><span class="chip-icon">👥</span>Grup manager</div>
+              <div class="chip" data-val="ai" onclick="this.classList.toggle('active')"><span class="chip-icon">🧠</span>Integrasi AI</div>
+              <div class="chip" data-val="economy" onclick="this.classList.toggle('active')"><span class="chip-icon">💰</span>Sistem ekonomi</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TG CONFIG -->
+        <div id="tg-config" style="display:none;">
+          <div class="card">
+            <div class="card-title"><span class="icon">⚙️</span> Konfigurasi Telegram Bot</div>
+            <div class="form-grid" style="margin-bottom:16px;">
+              <div class="form-group">
+                <label>Nama Bot</label>
+                <input type="text" id="tg-name" value="TelegramBot">
+              </div>
+              <div class="form-group">
+                <label>Bot Token (dari @BotFather)</label>
+                <input type="password" id="tg-token" placeholder="1234567890:ABC-DEF...">
+              </div>
+              <div class="form-group">
+                <label>Library</label>
+                <select id="tg-lib">
+                  <option value="telegraf">Telegraf (Rekomendasi)</option>
+                  <option value="node-telegram-bot-api">node-telegram-bot-api</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Mode</label>
+                <select id="tg-mode">
+                  <option value="polling">Polling (development)</option>
+                  <option value="webhook">Webhook (production)</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label>Pesan /start</label>
+                <textarea id="tg-start">Halo! Saya bot Telegram. Ketik /help untuk bantuan.</textarea>
+              </div>
+            </div>
+            <label style="margin-bottom:10px;display:block;">Pilih Fitur</label>
+            <div class="features-grid" id="tg-feat-grid">
+              <div class="chip active" data-val="help" onclick="this.classList.toggle('active')"><span class="chip-icon">❓</span>/help</div>
+              <div class="chip active" data-val="start" onclick="this.classList.toggle('active')"><span class="chip-icon">▶️</span>/start</div>
+              <div class="chip" data-val="inline" onclick="this.classList.toggle('active')"><span class="chip-icon">⌨️</span>Inline KB</div>
+              <div class="chip" data-val="photo" onclick="this.classList.toggle('active')"><span class="chip-icon">📸</span>Kirim foto</div>
+              <div class="chip" data-val="weather" onclick="this.classList.toggle('active')"><span class="chip-icon">🌤️</span>/weather</div>
+              <div class="chip" data-val="reminder" onclick="this.classList.toggle('active')"><span class="chip-icon">⏰</span>/remind</div>
+              <div class="chip" data-val="ai" onclick="this.classList.toggle('active')"><span class="chip-icon">🧠</span>Integrasi AI</div>
+              <div class="chip" data-val="broadcast" onclick="this.classList.toggle('active')"><span class="chip-icon">📢</span>Broadcast</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="generate-btn-wrap" style="display:none;margin-bottom:20px;">
+          <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px;" onclick="generateCode()">
+            ⚡ Generate Kode Bot
+          </button>
+        </div>
+
+        <!-- CODE OUTPUT -->
+        <div id="code-output" style="display:none;">
+          <div class="code-wrap">
+            <div class="code-header">
+              <div class="code-tabs">
+                <div class="code-tab active" id="tab-main" onclick="switchCodeTab('main')">index.js</div>
+                <div class="code-tab" id="tab-pkg" onclick="switchCodeTab('pkg')">package.json</div>
+                <div class="code-tab" id="tab-env" onclick="switchCodeTab('env'">.env.example</div>
+                <div class="code-tab" id="tab-start" onclick="switchCodeTab('start')">start.sh</div>
+              </div>
+              <div class="code-actions">
+                <span id="copy-notice" style="font-size:11px;color:var(--accent);display:none;">✓ Tersalin!</span>
+                <button class="btn btn-sm" onclick="copyCurrentCode()">Salin</button>
+                <button class="btn btn-primary btn-sm" onclick="saveAndDeploy()">💾 Simpan & Deploy →</button>
+              </div>
+            </div>
+            <pre id="code-display"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY BOTS PAGE -->
+      <div class="page" id="page-mybots">
+        <div class="card">
+          <div class="card-title"><span class="icon">🤖</span> Bot Tersimpan</div>
+          <div id="bots-table-wrap">
+            <div class="empty-state">
+              <div class="empty-icon">🤖</div>
+              <div class="empty-title">Belum ada bot tersimpan</div>
+              <div style="font-size:13px;margin-top:6px;">Buat bot baru lalu klik "Simpan & Deploy"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PTERODACTYL PAGE -->
+      <div class="page" id="page-pterodactyl">
+        <div class="ptero-connect">
+          <div class="ptero-header">
+            <div class="ptero-logo-badge">🦅</div>
+            <div>
+              <div class="ptero-title">Hubungkan Panel Pterodactyl</div>
+              <div class="ptero-subtitle">Masukkan URL panel dan API key untuk terhubung</div>
+            </div>
+          </div>
+          <div class="info-box">
+            📌 Cara mendapatkan API Key: Login ke panel Pterodactyl → Klik nama akun (pojok kanan atas) → <strong>API Credentials</strong> → Create API Key
+          </div>
+          <div class="form-grid three">
+            <div class="form-group full">
+              <label>URL Panel Pterodactyl</label>
+              <input type="text" id="ptero-url" placeholder="https://panel.domain.com" value="">
+            </div>
+            <div class="form-group full">
+              <label>Client API Key</label>
+              <input type="password" id="ptero-key" placeholder="ptlc_xxxxxxxxxxxxxxxxxxxx">
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:8px;">
+            <button class="btn btn-primary" id="connect-btn" onclick="connectPterodactyl()">
+              🔌 Hubungkan Panel
+            </button>
+            <button class="btn btn-danger" onclick="disconnectPterodactyl()" id="disconnect-btn" style="display:none;">
+              ✖ Putuskan
+            </button>
+          </div>
+        </div>
+
+        <div id="ptero-info" style="display:none;">
+          <div class="card">
+            <div class="card-title"><span class="icon">✅</span> Panel Terhubung</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>URL Panel</label>
+                <input type="text" id="ptero-url-display" readonly style="opacity:0.7;">
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <input type="text" value="Terhubung ✓" readonly style="color:var(--accent);opacity:0.9;">
+              </div>
+              <div class="form-group">
+                <label>Total Server</label>
+                <input type="text" id="ptero-server-count" readonly style="opacity:0.7;">
+              </div>
+              <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="ptero-username" readonly style="opacity:0.7;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SERVERS PAGE -->
+      <div class="page" id="page-servers">
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">🖥</span> Daftar Server
+            <button class="btn btn-sm" style="margin-left:auto;" onclick="refreshServers()">↻ Refresh</button>
+          </div>
+          <div id="server-list-wrap">
+            <div class="empty-state">
+              <div class="empty-icon">🦅</div>
+              <div class="empty-title">Panel belum terhubung</div>
+              <div style="font-size:13px;margin-top:6px;">Hubungkan panel Pterodactyl terlebih dahulu</div>
+              <button class="btn btn-primary" style="margin-top:16px;" onclick="showPage('pterodactyl')">Hubungkan Sekarang</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEPLOY PAGE -->
+      <div class="page" id="page-deploy">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div class="card">
+              <div class="card-title"><span class="icon">🤖</span> Pilih Bot</div>
+              <select id="deploy-bot-select" style="width:100%;margin-bottom:10px;">
+                <option value="">-- Pilih bot yang akan di-deploy --</option>
+              </select>
+              <div id="selected-bot-info" style="display:none;padding:12px;background:var(--bg3);border-radius:var(--radius-sm);font-size:12px;color:var(--muted);"></div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="icon">🖥</span> Pilih Server</div>
+              <div id="deploy-server-list">
+                <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">
+                  Hubungkan panel Pterodactyl dulu
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-title"><span class="icon">🚀</span> Deploy</div>
+              <div class="deploy-steps" id="deploy-steps">
+                <div class="deploy-step">
+                  <div class="step-indicator" id="step1">1</div>
+                  <div><div class="step-label-text">Siapkan file bot</div><div class="step-desc">Generate & validasi kode</div></div>
+                </div>
+                <div class="deploy-step">
+                  <div class="step-indicator" id="step2">2</div>
+                  <div><div class="step-label-text">Kirim ke server</div><div class="step-desc">Upload via Pterodactyl API</div></div>
+                </div>
+                <div class="deploy-step">
+                  <div class="step-indicator" id="step3">3</div>
+                  <div><div class="step-label-text">Install dependencies</div><div class="step-desc">npm install otomatis</div></div>
+                </div>
+                <div class="deploy-step">
+                  <div class="step-indicator" id="step4">4</div>
+                  <div><div class="step-label-text">Jalankan bot</div><div class="step-desc">Start process di server</div></div>
+                </div>
+              </div>
+              <button class="btn btn-primary" style="width:100%;" id="deploy-btn" onclick="startDeploy()">
+                🚀 Mulai Deploy
+              </button>
+            </div>
+            <div class="card" id="deploy-log-card" style="display:none;">
+              <div class="card-title"><span class="icon">📟</span> Deploy Log</div>
+              <div class="deploy-log" id="deploy-log"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div><!-- /layout -->
+
+<!-- MODAL: Save Bot -->
+<div class="modal-bg" id="save-modal">
+  <div class="modal">
+    <div class="modal-title">💾 Simpan Bot</div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Nama Tampilan Bot</label>
+      <input type="text" id="save-bot-name" placeholder="Nama untuk bot ini">
+    </div>
+    <div class="form-group">
+      <label>Catatan (opsional)</label>
+      <textarea id="save-bot-note" placeholder="Catatan..." style="min-height:60px;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSaveModal()">Batal</button>
+      <button class="btn btn-primary" onclick="confirmSave()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ STATE ============
+const state = {
+  pteroUrl: '',
+  pteroKey: '',
+  pteroConnected: false,
+  pteroServers: [],
+  pteroUser: null,
+  bots: JSON.parse(localStorage.getItem('botforge_bots') || '[]'),
+  currentBotType: null,
+  generatedCodes: {},
+  selectedServer: null,
+  currentCodeTab: 'main',
+  deployBotIndex: null,
+};
+
+// Load saved ptero config
+const savedPtero = JSON.parse(localStorage.getItem('botforge_ptero') || '{}');
+if (savedPtero.url) { state.pteroUrl = savedPtero.url; state.pteroKey = savedPtero.key; }
+
+// ============ NAVIGATION ============
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const titles = { dashboard:'Dashboard', create:'Buat Bot Baru', mybots:'Bot Saya', pterodactyl:'Pterodactyl Panel', servers:'Server List', deploy:'Deploy Bot' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+  const navs = document.querySelectorAll('.nav-item');
+  navs.forEach(n => { if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+name+"'")) n.classList.add('active'); });
+  if (name === 'mybots') renderBotTable();
+  if (name === 'servers' && state.pteroConnected) renderServerList();
+  if (name === 'dashboard') updateDashboard();
+  if (name === 'deploy') renderDeployPage();
+  if (name === 'pterodactyl') {
+    if (state.pteroUrl) document.getElementById('ptero-url').value = state.pteroUrl;
+    if (state.pteroConnected) showConnectedState();
+  }
+}
+
+// ============ BOT TYPE ============
+function selectBotType(type) {
+  state.currentBotType = type;
+  document.getElementById('type-wa').classList.remove('selected-wa');
+  document.getElementById('type-tg').classList.remove('selected-tg');
+  document.getElementById('wa-config').style.display = 'none';
+  document.getElementById('tg-config').style.display = 'none';
+  document.getElementById('generate-btn-wrap').style.display = 'none';
+  document.getElementById('code-output').style.display = 'none';
+  if (type === 'wa') {
+    document.getElementById('type-wa').classList.add('selected-wa');
+    document.getElementById('wa-config').style.display = 'block';
+  } else {
+    document.getElementById('type-tg').classList.add('selected-tg');
+    document.getElementById('tg-config').style.display = 'block';
+  }
+  document.getElementById('generate-btn-wrap').style.display = 'block';
+}
+
+// ============ CODE GENERATION ============
+function getFeatures(gridId) {
+  return [...document.querySelectorAll('#'+gridId+' .chip.active')].map(c => c.dataset.val);
+}
+
+function generateCode() {
+  const type = state.currentBotType;
+  if (!type) return notify('Pilih tipe bot dulu!', 'error');
+
+  let codes = {};
+
+  if (type === 'wa') {
+    const name = document.getElementById('wa-name').value || 'WABot';
+    const prefix = document.getElementById('wa-prefix').value || '!';
+    const owner = document.getElementById('wa-owner').value || '628123456789';
+    const lib = document.getElementById('wa-lib').value;
+    const welcome = document.getElementById('wa-welcome').value;
+    const feats = getFeatures('wa-feat-grid');
+
+    if (lib === 'baileys') {
+      codes.main = generateBaileysCode(name, prefix, owner, welcome, feats);
+      codes.pkg = `{
+  "name": "${name.toLowerCase().replace(/\s/g,'-')}",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.0",
+    "@hapi/boom": "^10.0.0",
+    "pino": "^8.0.0",
+    "dotenv": "^16.0.0"
+  }
+}`;
+    } else {
+      codes.main = generateWWebJSCode(name, prefix, owner, welcome, feats);
+      codes.pkg = `{
+  "name": "${name.toLowerCase().replace(/\s/g,'-')}",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" },
+  "dependencies": {
+    "whatsapp-web.js": "^1.23.0",
+    "qrcode-terminal": "^0.12.0",
+    "dotenv": "^16.0.0"
+  }
+}`;
+    }
+    codes.env = `# WhatsApp Bot - ${name}
+OWNER_NUMBER=${owner}
+PREFIX=${prefix}
+BOT_NAME=${name}`;
+    codes.start = `#!/bin/bash
+# ${name} startup script
+echo "Starting ${name}..."
+npm install --production
+node index.js`;
+    state.generatedCodes = { codes, type, name, lib, feats, prefix, owner, welcome };
+
+  } else {
+    const name = document.getElementById('tg-name').value || 'TelegramBot';
+    const token = document.getElementById('tg-token').value || 'YOUR_BOT_TOKEN';
+    const lib = document.getElementById('tg-lib').value;
+    const mode = document.getElementById('tg-mode').value;
+    const startMsg = document.getElementById('tg-start').value;
+    const feats = getFeatures('tg-feat-grid');
+
+    codes.main = generateTelegrafCode(name, token, startMsg, feats, mode);
+    codes.pkg = `{
+  "name": "${name.toLowerCase().replace(/\s/g,'-')}",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "scripts": { "start": "node bot.js" },
+  "dependencies": {
+    "telegraf": "^4.15.0",
+    "dotenv": "^16.0.0"
+  }
+}`;
+    codes.env = `# Telegram Bot - ${name}
+BOT_TOKEN=${token}
+ADMIN_ID=YOUR_TELEGRAM_USER_ID
+WEBHOOK_URL=https://yourdomain.com`;
+    codes.start = `#!/bin/bash
+echo "Starting ${name}..."
+npm install --production
+node bot.js`;
+    state.generatedCodes = { codes, type, name, lib, mode, feats, token, startMsg };
+  }
+
+  document.getElementById('code-output').style.display = 'block';
+  document.getElementById('tab-main').textContent = type === 'tg' ? 'bot.js' : 'index.js';
+  switchCodeTab('main');
+  notify('Kode berhasil digenerate!', 'success');
+  document.getElementById('code-output').scrollIntoView({ behavior: 'smooth' });
+}
+
+function generateBaileysCode(name, prefix, owner, welcome, feats) {
+  return `const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+const { Boom } = require('@hapi/boom');
+const pino = require('pino');
+require('dotenv').config();
+
+const BOT_NAME = process.env.BOT_NAME || '${name}';
+const PREFIX = process.env.PREFIX || '${prefix}';
+const OWNER = (process.env.OWNER_NUMBER || '${owner}') + '@s.whatsapp.net';
+
+async function connectToWA() {
+  const { state, saveCreds } = await useMultiFileAuthState('./auth_info_baileys');
+  const { version } = await fetchLatestBaileysVersion();
+
+  const sock = makeWASocket({
+    version,
+    auth: state,
+    printQRInTerminal: true,
+    logger: pino({ level: 'silent' }),
+    browser: [BOT_NAME, 'Safari', '3.0'],
+  });
+
+  sock.ev.on('creds.update', saveCreds);
+
+  sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
+    if (connection === 'close') {
+      const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
+      if (code !== DisconnectReason.loggedOut) connectToWA();
+      else console.log('Logged out. Hapus folder auth_info_baileys dan restart.');
+    }
+    if (connection === 'open') console.log('✅ ' + BOT_NAME + ' terhubung ke WhatsApp!');
+  });
+
+  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    if (type !== 'notify') return;
+    const msg = messages[0];
+    if (!msg?.message || msg.key.fromMe) return;
+
+    const from = msg.key.remoteJid;
+    const isGroup = from.endsWith('@g.us');
+    const body = msg.message?.conversation
+      || msg.message?.extendedTextMessage?.text
+      || msg.message?.imageMessage?.caption
+      || '';
+
+    const isOwner = (msg.key.participant || from) === OWNER;
+    const isCmd = body.startsWith(PREFIX);
+    const cmd = isCmd ? body.slice(PREFIX.length).split(' ')[0].toLowerCase() : '';
+    const args = body.split(' ').slice(1);
+    const reply = (text) => sock.sendMessage(from, { text: String(text) }, { quoted: msg });
+${feats.includes('help') ? `
+    if (cmd === 'help') {
+      return reply('*' + BOT_NAME + ' - Menu*\\n\\n' +
+        PREFIX + 'help - Menu ini\\n' +${feats.includes('ping') ? `
+        PREFIX + 'ping - Cek bot\\n' +` : ''}${feats.includes('sticker') ? `
+        PREFIX + 'sticker - Buat sticker\\n' +` : ''}${feats.includes('ai') ? `
+        PREFIX + 'ai [tanya] - Tanya AI\\n' +` : ''}
+        '\\n_' + BOT_NAME + ' by BotForge_');
+    }` : ''}
+${feats.includes('ping') ? `
+    if (cmd === 'ping') {
+      const latency = Date.now();
+      await reply('🏓 Mengukur...');
+      return sock.sendMessage(from, { text: '🏓 Pong! ' + (Date.now() - latency) + 'ms' }, { quoted: msg });
+    }` : ''}
+${feats.includes('sticker') ? `
+    if (cmd === 'sticker' || cmd === 's') {
+      const q = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      if (!q?.imageMessage && !msg.message?.imageMessage) return reply('❌ Kirim/reply gambar dengan caption ' + PREFIX + 'sticker');
+      // TODO: Implementasi konversi ke WebP dengan sharp
+      return reply('✅ Fitur sticker siap! Tambahkan library: npm install sharp');
+    }` : ''}
+${feats.includes('antispam') ? `
+    // Anti-spam system
+    if (!global.spamMap) global.spamMap = new Map();
+    const spamKey = (msg.key.participant || from);
+    const spamData = global.spamMap.get(spamKey) || { count: 0, time: Date.now() };
+    if (Date.now() - spamData.time < 5000) {
+      spamData.count++;
+      if (spamData.count > 5) { console.log('Spam detected:', spamKey); return; }
+    } else { spamData.count = 1; spamData.time = Date.now(); }
+    global.spamMap.set(spamKey, spamData);` : ''}
+${feats.includes('group') ? `
+    if (isGroup && isOwner) {
+      if (cmd === 'kick') {
+        const target = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        if (!target) return reply('❌ Reply pesan anggota untuk kick');
+        await sock.groupParticipantsUpdate(from, [target], 'remove');
+        return reply('✅ Anggota berhasil di-kick');
+      }
+      if (cmd === 'add') {
+        if (!args[0]) return reply('Format: ' + PREFIX + 'add 62xxx');
+        await sock.groupParticipantsUpdate(from, [args[0] + '@s.whatsapp.net'], 'add');
+        return reply('✅ ' + args[0] + ' ditambahkan');
+      }
+    }` : ''}
+${feats.includes('ai') ? `
+    if (cmd === 'ai' || cmd === 'tanya') {
+      const q = args.join(' ');
+      if (!q) return reply('Format: ' + PREFIX + 'ai [pertanyaan kamu]');
+      // TODO: Hubungkan ke OpenAI / Gemini API
+      // const res = await fetch('https://api.openai.com/v1/chat/completions', { ... });
+      return reply('🤖 [AI] Fitur aktif! Tambahkan OpenAI/Gemini API key di .env\\nPertanyaan: ' + q);
+    }` : ''}
+${feats.includes('economy') ? `
+    if (!global.balances) global.balances = {};
+    if (cmd === 'saldo') {
+      const bal = global.balances[from] || 0;
+      return reply('💰 Saldo kamu: Rp ' + bal.toLocaleString('id-ID'));
+    }
+    if (cmd === 'daily') {
+      if (!global.lastDaily) global.lastDaily = {};
+      const last = global.lastDaily[from] || 0;
+      if (Date.now() - last < 86400000) return reply('❌ Sudah claim daily hari ini!');
+      global.balances[from] = (global.balances[from] || 0) + 10000;
+      global.lastDaily[from] = Date.now();
+      return reply('✅ Daily claim! +Rp 10.000\\nSaldo: Rp ' + global.balances[from].toLocaleString('id-ID'));
+    }` : ''}
+
+    // Auto-reply
+    if (!isCmd) {
+      const lc = body.toLowerCase();
+      if (lc.match(/^(halo|hai|hi|hello|oi|hey)/)) {
+        await reply('${welcome}');
+      }
+    }
+  });
+
+  return sock;
+}
+
+connectToWA();
+`;
+}
+
+function generateWWebJSCode(name, prefix, owner, welcome, feats) {
+  return `const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+require('dotenv').config();
+
+const BOT_NAME = process.env.BOT_NAME || '${name}';
+const PREFIX = process.env.PREFIX || '${prefix}';
+const OWNER = (process.env.OWNER_NUMBER || '${owner}') + '@c.us';
+
+const client = new Client({
+  authStrategy: new LocalAuth({ clientId: '${name.toLowerCase().replace(/\s/g,'-')}' }),
+  puppeteer: { headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+});
+
+client.on('qr', qr => { qrcode.generate(qr, { small: true }); console.log('Scan QR di atas!'); });
+client.on('ready', () => console.log('✅ ' + BOT_NAME + ' siap!'));
+
+client.on('message', async msg => {
+  const body = msg.body;
+  const from = msg.from;
+  const isOwner = from === OWNER;
+  const isCmd = body.startsWith(PREFIX);
+  const cmd = isCmd ? body.slice(PREFIX.length).split(' ')[0].toLowerCase() : '';
+  const args = body.split(' ').slice(1);
+${feats.includes('help') ? `
+  if (cmd === 'help') return msg.reply('*' + BOT_NAME + ' Menu*\\n' + PREFIX + 'help - Menu\\n' + PREFIX + 'ping - Cek bot');` : ''}
+${feats.includes('ping') ? `
+  if (cmd === 'ping') return msg.reply('🏓 Pong!');` : ''}
+${feats.includes('sticker') ? `
+  if (cmd === 'sticker' && msg.hasMedia) {
+    const media = await msg.downloadMedia();
+    await client.sendMessage(from, media, { sendMediaAsSticker: true, stickerName: BOT_NAME });
+    return;
+  }` : ''}
+  if (!isCmd) {
+    if (body.toLowerCase().match(/^(halo|hai|hi)/)) msg.reply('${welcome}');
+  }
+});
+
+client.initialize();
+`;
+}
+
+function generateTelegrafCode(name, token, startMsg, feats, mode) {
+  return `const { Telegraf${feats.includes('inline') ? ', Markup' : ''} } = require('telegraf');
+require('dotenv').config();
+
+const BOT_TOKEN = process.env.BOT_TOKEN || '${token}';
+const ADMIN_ID = process.env.ADMIN_ID;
+const bot = new Telegraf(BOT_TOKEN);
+
+console.log('🤖 ${name} starting...');
+${feats.includes('start') ? `
+bot.start((ctx) => {
+  ctx.reply('${startMsg}'${feats.includes('inline') ? `,
+    Markup.inlineKeyboard([
+      [Markup.button.callback('📚 Help', 'show_help'), Markup.button.callback('ℹ️ Info', 'show_info')]
+    ])` : ''});
+});` : ''}
+${feats.includes('help') ? `
+bot.help((ctx) => {
+  const helpText = [
+    '📋 *${name} — Daftar Perintah*',
+    '',
+    '/start — Mulai bot',
+    '/help — Menu bantuan',${feats.includes('weather') ? `
+    '/weather [kota] — Info cuaca',` : ''}${feats.includes('reminder') ? `
+    '/remind [menit] [pesan] — Pengingat',` : ''}${feats.includes('ai') ? `
+    '/ai [pertanyaan] — Tanya AI',` : ''}
+    '',
+    '_Dibuat dengan BotForge_'
+  ].join('\\n');
+  ctx.replyWithMarkdown(helpText);
+});` : ''}
+${feats.includes('inline') ? `
+bot.action('show_help', ctx => { ctx.answerCbQuery(); ctx.reply('Gunakan /help untuk menu lengkap'); });
+bot.action('show_info', ctx => { ctx.answerCbQuery('Info bot'); ctx.reply('Bot: ${name}\\nDibuat dengan BotForge'); });` : ''}
+${feats.includes('weather') ? `
+bot.command('weather', async ctx => {
+  const city = ctx.message.text.split(' ').slice(1).join(' ');
+  if (!city) return ctx.reply('❌ Format: /weather Jakarta');
+  // TODO: Gunakan OpenWeatherMap API
+  // const res = await fetch(\`https://api.openweathermap.org/data/2.5/weather?q=\${city}&appid=\${process.env.OWM_KEY}&units=metric&lang=id\`);
+  ctx.reply(\`🌤️ Cuaca di *\${city}*\\n\\nHubungkan ke OpenWeatherMap API untuk data nyata.\`, { parse_mode: 'Markdown' });
+});` : ''}
+${feats.includes('reminder') ? `
+bot.command('remind', ctx => {
+  const parts = ctx.message.text.split(' ').slice(1);
+  const mins = parseInt(parts[0]);
+  const remindMsg = parts.slice(1).join(' ');
+  if (!mins || !remindMsg) return ctx.reply('❌ Format: /remind 10 Minum obat');
+  ctx.reply(\`✅ Pengingat diset dalam \${mins} menit!\\n"\${remindMsg}"\`);
+  setTimeout(() => ctx.reply(\`⏰ Pengingat: \${remindMsg}\`), mins * 60000);
+});` : ''}
+${feats.includes('ai') ? `
+bot.command('ai', async ctx => {
+  const q = ctx.message.text.split(' ').slice(1).join(' ');
+  if (!q) return ctx.reply('❌ Format: /ai pertanyaan kamu');
+  // TODO: Hubungkan ke OpenAI / Gemini
+  ctx.reply(\`🤖 [AI] Pertanyaan diterima: "\${q}"\\n\\nTambahkan API key AI di .env\`);
+});` : ''}
+${feats.includes('broadcast') ? `
+bot.command('broadcast', async ctx => {
+  if (String(ctx.from.id) !== ADMIN_ID) return ctx.reply('❌ Hanya admin!');
+  const msg = ctx.message.text.split(' ').slice(1).join(' ');
+  if (!msg) return ctx.reply('Format: /broadcast pesan');
+  // TODO: Simpan user IDs dan broadcast ke semua
+  ctx.reply('📢 Broadcast: ' + msg + '\\n(Implementasi penyimpanan user IDs diperlukan)');
+});` : ''}
+${feats.includes('photo') ? `
+bot.command('photo', async ctx => {
+  await ctx.replyWithPhoto({ url: 'https://picsum.photos/600/400' }, { caption: 'Foto dari ${name}' });
+});` : ''}
+
+bot.on('text', ctx => {
+  const t = ctx.message.text.toLowerCase();
+  if (t.match(/^(halo|hai|hi|hello)/)) ctx.reply(\`Halo! Saya \${' '}${name}. Ketik /help untuk bantuan.\`);
+});
+
+bot.catch(err => console.error('[Error]', err));
+
+${mode === 'webhook' ? `const PORT = process.env.PORT || 3000;
+bot.launch({ webhook: { domain: process.env.WEBHOOK_URL, port: PORT } });
+console.log('🚀 ${name} webhook di port ' + PORT);` : `bot.launch();
+console.log('✅ ${name} berjalan (polling mode)!');`}
+
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
+`;
+}
+
+// ============ CODE TABS ============
+function switchCodeTab(tab) {
+  state.currentCodeTab = tab;
+  const tabMap = { main: state.generatedCodes.codes?.main, pkg: state.generatedCodes.codes?.pkg, env: state.generatedCodes.codes?.env, start: state.generatedCodes.codes?.start };
+  document.getElementById('code-display').textContent = tabMap[tab] || '';
+  document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function copyCurrentCode() {
+  const text = document.getElementById('code-display').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const n = document.getElementById('copy-notice');
+    n.style.display = 'inline';
+    setTimeout(() => n.style.display = 'none', 2000);
+  });
+}
+
+// ============ SAVE BOT ============
+function saveAndDeploy() {
+  if (!state.generatedCodes.codes) return notify('Generate kode dulu!', 'error');
+  document.getElementById('save-bot-name').value = state.generatedCodes.name || '';
+  document.getElementById('save-modal').classList.add('open');
+}
+function closeSaveModal() { document.getElementById('save-modal').classList.remove('open'); }
+function confirmSave() {
+  const saveName = document.getElementById('save-bot-name').value.trim();
+  if (!saveName) return notify('Masukkan nama bot!', 'error');
+  const bot = {
+    id: Date.now(),
+    name: saveName,
+    type: state.generatedCodes.type,
+    lib: state.generatedCodes.lib || state.generatedCodes.mode,
+    note: document.getElementById('save-bot-note').value,
+    codes: state.generatedCodes.codes,
+    createdAt: new Date().toLocaleDateString('id-ID'),
+    status: 'saved',
+  };
+  state.bots.push(bot);
+  localStorage.setItem('botforge_bots', JSON.stringify(state.bots));
+  closeSaveModal();
+  notify('Bot "' + saveName + '" berhasil disimpan!', 'success');
+  updateDashboard();
+  setTimeout(() => showPage('deploy'), 800);
+}
+
+// ============ BOT TABLE ============
+function renderBotTable() {
+  const wrap = document.getElementById('bots-table-wrap');
+  if (!state.bots.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🤖</div><div class="empty-title">Belum ada bot</div></div>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Nama</th><th>Tipe</th><th>Library</th><th>Dibuat</th><th>Status</th><th>Aksi</th></tr></thead>
+    <tbody>${state.bots.map((b,i) => `<tr>
+      <td><strong>${b.name}</strong></td>
+      <td><span class="tag tag-${b.type}">${b.type === 'wa' ? '💬 WhatsApp' : '✈️ Telegram'}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;">${b.lib || '-'}</td>
+      <td style="color:var(--muted);">${b.createdAt}</td>
+      <td><span class="server-status ${b.status === 'running' ? 'running' : 'offline'}">${b.status === 'running' ? '▶ Running' : '◼ Saved'}</span></td>
+      <td><button class="btn btn-sm" onclick="deployBot(${i})">🚀 Deploy</button> <button class="btn btn-sm btn-danger" onclick="deleteBot(${i})">✖</button></td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function deleteBot(i) {
+  state.bots.splice(i, 1);
+  localStorage.setItem('botforge_bots', JSON.stringify(state.bots));
+  renderBotTable();
+  updateDashboard();
+  notify('Bot dihapus', 'info');
+}
+
+function deployBot(i) {
+  state.deployBotIndex = i;
+  showPage('deploy');
+  setTimeout(() => {
+    const sel = document.getElementById('deploy-bot-select');
+    sel.value = String(i);
+    updateSelectedBot();
+  }, 100);
+}
+
+// ============ DASHBOARD ============
+function updateDashboard() {
+  document.getElementById('stat-total').textContent = state.bots.length;
+  document.getElementById('stat-active').textContent = state.bots.filter(b => b.status === 'running').length;
+  document.getElementById('stat-wa').textContent = state.bots.filter(b => b.type === 'wa').length;
+  document.getElementById('stat-tg').textContent = state.bots.filter(b => b.type === 'tg').length;
+  const wrap = document.getElementById('dash-bot-list');
+  if (!state.bots.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:20px 0;"><div class="empty-icon" style="font-size:28px;">🤖</div><div style="font-size:13px;color:var(--muted);">Belum ada bot</div></div>`;
+    return;
+  }
+  wrap.innerHTML = state.bots.slice(-4).reverse().map(b => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:20px;">${b.type === 'wa' ? '💬' : '✈️'}</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;">${b.name}</div><div style="font-size:11px;color:var(--muted);">${b.createdAt}</div></div>
+      <span class="server-status ${b.status === 'running' ? 'running' : 'offline'}" style="font-size:10px;">${b.status === 'running' ? '▶ Running' : '◼ Saved'}</span>
+    </div>`).join('');
+}
+
+// ============ PTERODACTYL ============
+async function connectPterodactyl() {
+  const url = document.getElementById('ptero-url').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('ptero-key').value.trim();
+  if (!url || !key) return notify('Isi URL dan API Key!', 'error');
+
+  const btn = document.getElementById('connect-btn');
+  btn.innerHTML = '<span class="spinner"></span> Menghubungkan...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(url + '/api/client/account', {
+      headers: { 'Authorization': 'Bearer ' + key, 'Accept': 'application/json', 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' - Periksa URL dan API Key');
+    const data = await res.json();
+
+    const serversRes = await fetch(url + '/api/client', {
+      headers: { 'Authorization': 'Bearer ' + key, 'Accept': 'application/json' }
+    });
+    const serversData = await serversRes.json();
+
+    state.pteroUrl = url;
+    state.pteroKey = key;
+    state.pteroConnected = true;
+    state.pteroUser = data.attributes;
+    state.pteroServers = serversData.data || [];
+
+    localStorage.setItem('botforge_ptero', JSON.stringify({ url, key }));
+
+    document.getElementById('status-dot').classList.add('connected');
+    document.getElementById('status-text').textContent = 'Panel terhubung ✓';
+    showConnectedState();
+    notify('Berhasil terhubung ke Pterodactyl!', 'success');
+
+  } catch (e) {
+    notify('Gagal: ' + e.message, 'error');
+    document.getElementById('status-dot').classList.add('error');
+    document.getElementById('status-text').textContent = 'Koneksi gagal';
+  }
+
+  btn.innerHTML = '🔌 Hubungkan Panel';
+  btn.disabled = false;
+}
+
+function showConnectedState() {
+  document.getElementById('ptero-info').style.display = 'block';
+  document.getElementById('ptero-url-display').value = state.pteroUrl;
+  document.getElementById('ptero-server-count').value = state.pteroServers.length + ' server';
+  document.getElementById('ptero-username').value = state.pteroUser?.username || '-';
+  document.getElementById('disconnect-btn').style.display = 'inline-flex';
+  document.getElementById('status-dot').className = 'status-dot connected';
+  document.getElementById('status-text').textContent = 'Panel terhubung ✓';
+}
+
+function disconnectPterodactyl() {
+  state.pteroUrl = ''; state.pteroKey = ''; state.pteroConnected = false;
+  state.pteroServers = []; state.pteroUser = null;
+  localStorage.removeItem('botforge_ptero');
+  document.getElementById('ptero-info').style.display = 'none';
+  document.getElementById('disconnect-btn').style.display = 'none';
+  document.getElementById('status-dot').className = 'status-dot';
+  document.getElementById('status-text').textContent = 'Panel belum terhubung';
+  document.getElementById('ptero-url').value = '';
+  document.getElementById('ptero-key').value = '';
+  notify('Panel diputuskan', 'info');
+}
+
+// ============ SERVER LIST ============
+function renderServerList() {
+  const wrap = document.getElementById('server-list-wrap');
+  if (!state.pteroConnected) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🦅</div><div class="empty-title">Panel belum terhubung</div><button class="btn btn-primary" style="margin-top:14px;" onclick="showPage('pterodactyl')">Hubungkan</button></div>`;
+    return;
+  }
+  if (!state.pteroServers.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🖥</div><div class="empty-title">Tidak ada server</div><div style="font-size:13px;color:var(--muted);margin-top:6px;">Buat server di panel Pterodactyl kamu</div></div>`;
+    return;
+  }
+  const html = `<div class="server-list">` + state.pteroServers.map(s => {
+    const attr = s.attributes;
+    const isRunning = attr.status === 'running';
+    return `<div class="server-item" data-id="${attr.identifier}">
+      <div class="server-icon">🖥</div>
+      <div class="server-info">
+        <div class="server-name">${attr.name}</div>
+        <div class="server-id">${attr.identifier} · ${attr.node || 'Node'}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-align:right;">${attr.limits?.memory || 0} MB RAM</div>
+        <span class="server-status ${isRunning ? 'running' : 'offline'}">${isRunning ? '▶ Running' : '◼ Offline'}</span>
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+  wrap.innerHTML = html;
+}
+
+async function refreshServers() {
+  if (!state.pteroConnected) return notify('Hubungkan panel dulu!', 'error');
+  notify('Memuat ulang server...', 'info');
+  try {
+    const res = await fetch(state.pteroUrl + '/api/client', {
+      headers: { 'Authorization': 'Bearer ' + state.pteroKey, 'Accept': 'application/json' }
+    });
+    const data = await res.json();
+    state.pteroServers = data.data || [];
+    renderServerList();
+    renderDeployPage();
+    notify(state.pteroServers.length + ' server ditemukan', 'success');
+  } catch (e) { notify('Gagal refresh: ' + e.message, 'error'); }
+}
+
+// ============ DEPLOY PAGE ============
+function renderDeployPage() {
+  const sel = document.getElementById('deploy-bot-select');
+  sel.innerHTML = '<option value="">-- Pilih bot --</option>' + state.bots.map((b,i) =>
+    `<option value="${i}">${b.name} (${b.type === 'wa' ? 'WhatsApp' : 'Telegram'})</option>`).join('');
+
+  const serverWrap = document.getElementById('deploy-server-list');
+  if (!state.pteroConnected) {
+    serverWrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Hubungkan panel Pterodactyl dulu<br><button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="showPage('pterodactyl')">Hubungkan</button></div>`;
+    return;
+  }
+  if (!state.pteroServers.length) {
+    serverWrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Tidak ada server tersedia</div>`;
+    return;
+  }
+  serverWrap.innerHTML = `<div class="server-list">` + state.pteroServers.map(s => {
+    const attr = s.attributes;
+    return `<div class="server-item" data-id="${attr.identifier}" onclick="selectDeployServer('${attr.identifier}', '${attr.name}')">
+      <div class="server-icon">🖥</div>
+      <div class="server-info">
+        <div class="server-name">${attr.name}</div>
+        <div class="server-id">${attr.identifier}</div>
+      </div>
+      <span class="server-status ${attr.status === 'running' ? 'running' : 'offline'}">${attr.status === 'running' ? '▶ Running' : '◼ Offline'}</span>
+    </div>`;
+  }).join('') + `</div>`;
+
+  if (state.deployBotIndex !== null) {
+    sel.value = String(state.deployBotIndex);
+    updateSelectedBot();
+  }
+}
+
+function selectDeployServer(id, name) {
+  state.selectedServer = { id, name };
+  document.querySelectorAll('#deploy-server-list .server-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.id === id);
+  });
+  notify('Server "' + name + '" dipilih', 'info');
+}
+
+function updateSelectedBot() {
+  const idx = document.getElementById('deploy-bot-select').value;
+  const infoEl = document.getElementById('selected-bot-info');
+  if (idx === '') { infoEl.style.display = 'none'; return; }
+  const bot = state.bots[parseInt(idx)];
+  if (!bot) return;
+  infoEl.style.display = 'block';
+  infoEl.innerHTML = `<strong>${bot.name}</strong> · ${bot.type === 'wa' ? 'WhatsApp' : 'Telegram'} · ${bot.lib || '-'}<br>Dibuat: ${bot.createdAt}`;
+}
+
+document.getElementById('deploy-bot-select').addEventListener('change', updateSelectedBot);
+
+// ============ DEPLOY PROCESS ============
+async function startDeploy() {
+  const botIdx = document.getElementById('deploy-bot-select').value;
+  if (botIdx === '') return notify('Pilih bot yang akan di-deploy!', 'error');
+  if (!state.selectedServer) return notify('Pilih server tujuan!', 'error');
+  if (!state.pteroConnected) return notify('Hubungkan panel Pterodactyl dulu!', 'error');
+
+  const bot = state.bots[parseInt(botIdx)];
+  const log = document.getElementById('deploy-log');
+  const logCard = document.getElementById('deploy-log-card');
+  logCard.style.display = 'block';
+  log.innerHTML = '';
+  document.getElementById('deploy-btn').disabled = true;
+  document.getElementById('deploy-btn').innerHTML = '<span class="spinner"></span> Deploying...';
+
+  const addLog = (msg, cls = '') => {
+    const time = new Date().toLocaleTimeString('id-ID');
+    log.innerHTML += `<div class="log-line"><span class="log-time">[${time}]</span><span class="${cls}">${msg}</span></div>`;
+    log.scrollTop = log.scrollHeight;
+  };
+
+  const setStep = (n, done = false) => {
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById('step' + i);
+      if (i < n) { el.classList.add('done'); el.classList.remove('active'); el.textContent = '✓'; }
+      else if (i === n) { el.classList.add(done ? 'done' : 'active'); el.textContent = done ? '✓' : i; }
+      else { el.classList.remove('done', 'active'); el.textContent = i; }
+    }
+  };
+
+  try {
+    // Step 1
+    setStep(1);
+    addLog('Menyiapkan file bot...', 'log-info');
+    await sleep(600);
+    addLog('✓ Kode bot disiapkan: ' + Object.keys(bot.codes).length + ' file', 'log-success');
+    setStep(1, true); setStep(2);
+
+    // Step 2 - Upload files via Pterodactyl API
+    addLog('Menghubungkan ke server ' + state.selectedServer.name + '...', 'log-info');
+    await sleep(400);
+
+    const serverId = state.selectedServer.id;
+    const mainFile = bot.type === 'tg' ? 'bot.js' : 'index.js';
+
+    // Upload index.js / bot.js
+    addLog('Mengupload ' + mainFile + '...', 'log-info');
+    try {
+      await uploadFileToServer(serverId, mainFile, bot.codes.main);
+      addLog('✓ ' + mainFile + ' berhasil diupload', 'log-success');
+    } catch(e) {
+      addLog('⚠ Upload ' + mainFile + ': ' + e.message, 'log-warn');
+    }
+
+    // Upload package.json
+    addLog('Mengupload package.json...', 'log-info');
+    try {
+      await uploadFileToServer(serverId, 'package.json', bot.codes.pkg);
+      addLog('✓ package.json berhasil diupload', 'log-success');
+    } catch(e) {
+      addLog('⚠ Upload package.json: ' + e.message, 'log-warn');
+    }
+
+    // Upload .env.example
+    try {
+      await uploadFileToServer(serverId, '.env.example', bot.codes.env);
+      addLog('✓ .env.example diupload', 'log-success');
+    } catch(e) {}
+
+    // Upload start.sh
+    try {
+      await uploadFileToServer(serverId, 'start.sh', bot.codes.start);
+      addLog('✓ start.sh diupload', 'log-success');
+    } catch(e) {}
+
+    setStep(2, true); setStep(3);
+
+    // Step 3 - Send install command
+    addLog('Mengirim perintah npm install...', 'log-info');
+    await sleep(500);
+    try {
+      await sendServerCommand(serverId, 'npm install --production');
+      addLog('✓ Perintah npm install dikirim', 'log-success');
+    } catch(e) {
+      addLog('⚠ Kirim perintah: ' + e.message, 'log-warn');
+    }
+    await sleep(1200);
+    setStep(3, true); setStep(4);
+
+    // Step 4 - Start bot
+    addLog('Menjalankan bot...', 'log-info');
+    await sleep(600);
+    try {
+      await sendServerPower(serverId, 'start');
+      addLog('✓ Server diperintahkan untuk start!', 'log-success');
+    } catch(e) {
+      addLog('⚠ Start server: ' + e.message, 'log-warn');
+    }
+    await sleep(800);
+
+    setStep(4, true);
+    addLog('🎉 Deploy selesai! Bot "' + bot.name + '" berhasil dideploy ke ' + state.selectedServer.name, 'log-success');
+    addLog('💡 Cek konsol server di Pterodactyl untuk log bot', 'log-info');
+
+    // Update bot status
+    state.bots[parseInt(botIdx)].status = 'running';
+    localStorage.setItem('botforge_bots', JSON.stringify(state.bots));
+    updateDashboard();
+    notify('Deploy berhasil! 🎉', 'success');
+
+  } catch (err) {
+    addLog('✖ Error: ' + err.message, 'log-error');
+    notify('Deploy gagal: ' + err.message, 'error');
+  }
+
+  document.getElementById('deploy-btn').disabled = false;
+  document.getElementById('deploy-btn').innerHTML = '🚀 Mulai Deploy';
+}
+
+async function uploadFileToServer(serverId, filename, content) {
+  const res = await fetch(`${state.pteroUrl}/api/client/servers/${serverId}/files/write?file=/${filename}`, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + state.pteroKey, 'Content-Type': 'text/plain' },
+    body: content
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+}
+
+async function sendServerCommand(serverId, command) {
+  const res = await fetch(`${state.pteroUrl}/api/client/servers/${serverId}/command`, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + state.pteroKey, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ command })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+}
+
+async function sendServerPower(serverId, action) {
+  const res = await fetch(`${state.pteroUrl}/api/client/servers/${serverId}/power`, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + state.pteroKey, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ signal: action })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============ NOTIFICATIONS ============
+function notify(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = 'notif ' + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ============ INIT ============
+updateDashboard();
+if (savedPtero.url && savedPtero.key) {
+  document.getElementById('ptero-url').value = savedPtero.url;
+  // Try auto-reconnect silently
+  setTimeout(async () => {
+    try {
+      const res = await fetch(savedPtero.url + '/api/client', {
+        headers: { 'Authorization': 'Bearer ' + savedPtero.key, 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        state.pteroUrl = savedPtero.url;
+        state.pteroKey = savedPtero.key;
+        state.pteroConnected = true;
+        state.pteroServers = data.data || [];
+        document.getElementById('status-dot').classList.add('connected');
+        document.getElementById('status-text').textContent = 'Panel terhubung ✓';
+      }
+    } catch(e) {}
+  }, 500);
+}
+</script>
+</body>
+</html>
